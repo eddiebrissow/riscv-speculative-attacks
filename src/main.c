@@ -1,9 +1,9 @@
-/* Copyright 2019 SiFive, Inc */
-/* SPDX-License-Identifier: Apache-2.0 */
+// /* Copyright 2019 SiFive, Inc */
+// /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdio.h>
+// #include <stdio.h>
 
-int main() {
-    for (int i=0;i<10;i++)
-        printf("Hello, World!\n");
-}
+// int main() {
+//     for (int i=0;i<10;i++)
+//         printf("Hello, World!\n");
+// }

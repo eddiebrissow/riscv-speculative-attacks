@@ -52,23 +52,23 @@ void topTwoIdx(uint32_t* inArray, uint32_t inArraySize, uint8_t* outIdxArray, ui
  * @input idx input to be used to idx the array
  */
 void victimFunc(uint32_t idx){
-    uint8_t dummy = 2;
+    uint8_t dummy = 0;
 
-    // stall array1_sz by doing div operations (operation is (array1_sz << 4) / (2*4))
-    array1_sz =  array1_sz << 4;
-    // array1_sz = array1_sz / (2*4);
+    // // stall array1_sz by doing div operations (operation is (array1_sz << 4) / (2*4))
+    // array1_sz =  array1_sz << 4;
+    // // array1_sz = array1_sz / (2*4);
 
-        asm(
-            "lw     a2, (%[in])\n"
-            "lw	    a3, (%[inout])\n"
-            "div    a2, a2, a3\n"
-            "div	a2, a2, a3\n"
-            "div	a2, a2, a3\n"
-            "div	a2, a2, a3\n"
-            "sw	    a3, (%[out])\n"
-            : [out] "=r" (array1_sz)
-            : [inout] "r" (array1_sz), [in] "r" (dummy)
-            : "a2", "a3");
+    //     asm(
+    //         "lw     a2, (%[in])\n"
+    //         "lw	    a3, (%[inout])\n"
+    //         "div    a2, a2, a3\n"
+    //         "div	a2, a2, a3\n"
+    //         "div	a2, a2, a3\n"
+    //         "div	a2, a2, a3\n"
+    //         "sw	    a3, (%[out])\n"
+    //         : [out] "=r" (array1_sz)
+    //         : [inout] "r" (array1_sz), [in] "r" (dummy)
+    //         : "a2", "a3");
 
 
     // asm("fcvt.s.wu	fa4, %[in]\n"
@@ -87,7 +87,7 @@ void victimFunc(uint32_t idx){
     }
 
     // bound speculation here just in case it goes over
-    dummy = rdcycle();
+    // dummy = rdcycle();
 }
 
 int main(void){

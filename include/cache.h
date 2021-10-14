@@ -3,10 +3,10 @@
 
 // cache values
 // TODO: check that these parameters are right
-#define L1_SETS 64
+#define L1_SETS 32
 #define L1_SET_BITS 6 // note: this is log2Ceil(L1_SETS)
-#define L1_WAYS 8 //note: this looks like there are 8 ways
-#define L1_BLOCK_SZ_BYTES 64
+#define L1_WAYS 2 //note: this looks like there are 8 ways
+#define L1_BLOCK_SZ_BYTES 16384
 #define L1_BLOCK_BITS 6 // note: this is log2Ceil(L1_BLOCK_SZ_BYTES)
 #define L1_SZ_BYTES (L1_SETS*L1_WAYS*L1_BLOCK_SZ_BYTES)
 #define FULL_MASK 0xFFFFFFFFFFFFFFFF
@@ -40,7 +40,7 @@ uint8_t dummyMem[5 * L1_SZ_BYTES];
  * @param sz size of the data to remove in bytes
  */
 void flushCache(uint32_t addr, uint32_t sz){
-    //printf("Flushed addr(0x%x) tag(0x%x) set(0x%x) off(0x%x) sz(%d)\n", addr, (addr & TAG_MASK) >> (L1_SET_BITS + L1_BLOCK_BITS), (addr & SET_MASK) >> L1_BLOCK_BITS, addr & OFF_MASK, sz);
+    // printf("Flushed addr(0x%x) tag(0x%x) set(0x%x) off(0x%x) sz(%d)\n", addr, (addr & TAG_MASK) >> (L1_SET_BITS + L1_BLOCK_BITS), (addr & SET_MASK) >> L1_BLOCK_BITS, addr & OFF_MASK, sz);
 
     // find out the amount of blocks you want to clear
     uint32_t numSetsClear = sz >> L1_BLOCK_BITS;
@@ -52,7 +52,7 @@ void flushCache(uint32_t addr, uint32_t sz){
         numSetsClear = L1_SETS;
     }
     
-    //printf("numSetsClear(%d)\n", numSetsClear);
+    // printf("numSetsClear(%d)\n", numSetsClear);
 
     // temp variable used for nothing
     uint8_t dummy = 0;
@@ -63,22 +63,22 @@ void flushCache(uint32_t addr, uint32_t sz){
     // 1. dummyMem <= alignedMem < dummyMem + sizeof(dummyMem)
     // 2. alignedMem has idx = 0 and offset = 0 
     uint32_t alignedMem = (((uint32_t)&dummyMem) + L1_SZ_BYTES) & TAG_MASK;
-    //printf("alignedMem(0x%x)\n", alignedMem);
+    // printf("alignedMem(0x%x)\n", alignedMem);
         
     for (uint32_t i = 0; i < numSetsClear; ++i){
         // offset to move across the sets that you want to flush
         uint32_t setOffset = (((addr & SET_MASK) >> L1_BLOCK_BITS) + i) << L1_BLOCK_BITS;
-        //printf("setOffset(0x%x)\n", setOffset);
+        // printf("setOffset(0x%x)\n", setOffset);
 
         // since there are L1_WAYS you need to flush the entire set
         for(uint32_t j = 0; j < 4*L1_WAYS; ++j){
             // offset to reaccess the set
             uint32_t wayOffset = j << (L1_BLOCK_BITS + L1_SET_BITS);
-            //printf("wayOffset(0x%x)\n", wayOffset);
+            // printf("wayOffset(0x%x)\n", wayOffset);
 
             // evict the previous cache block and put in the dummy mem
             dummy = *((uint8_t*)(alignedMem + setOffset + wayOffset));
-            //printf("evict read(0x%x)\n", alignedMem + setOffset + wayOffset);
+            // printf("evict read(0x%x)\n", alignedMem + setOffset + wayOffset);
         }
     }
 }

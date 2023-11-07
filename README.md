@@ -1,34 +1,18 @@
-# RISC-V Hifive1 Speculative Attacks
+# RISC-V Speculative Attacks
 
-This repository contains files to avaliate speculative attacks on Hifive boards.
+This repository contains files to avaliate speculative attacks on Allwinner D1 boards.
 
-
-L1 Sets 16384 
-L1 Ways 2
-L1 Linesize 32 bytes
-MSHR File Entries 4
-BTB Sets    512
-BTB Banks   2
-BTB Ways    4
-GShare History Bits 23 
-GShare Counter Table Entries 4096
 
 ## Suported boards
 
-| Name | Revision |
-| ---- | ---------|
-|Hifive1| revb|
+| Name  | Revision |
+| ----  | ---------|
+|MangoPi| 1.0	   |
 
 ## Build
 
-Install [platformio](https://platformio.org/)
-
-Build and upload
+Build
 ```bash
-platformio run --targer upload
+make build
 ``` 
 
-## Monitor
-```bash
-platformio device monitor
-``` 

@@ -16,7 +16,7 @@ unsigned int readl(unsigned int address){
 
 void writel(unsigned int address, unsigned int value){
     asm volatile (
-        "sw %0, 0(%1)"  // Armazena o novo valor no registrador
+        "sw %0, 0(%1)"  // Stores a new value on register
         :
         : "r" (value), "r" (address)
     );
@@ -32,7 +32,7 @@ void sfence(){
 }
 
 void clwb(void *address) {
-    // asm volatile ("clwb %0" : "+m" (*(char *)address)); // don't exists
+    // asm volatile ("clwb %0" : "+m" (*(char *)address)); // doesn't exists
 }
 
 
@@ -54,7 +54,7 @@ void wait(int seconds){
 }
 
 void flush_allocate(){
-     const int size = 64*1024; // Allocate 64kb. Set much larger then L1
+     const int size = 64*1024; // Allocate 64kb. Set much larger than L1
      char *c = (char *)malloc(size);
      for (int i = 0; i < 0xff; i++)
        for (int j = 0; j < size; j++)

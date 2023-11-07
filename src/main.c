@@ -1,5 +1,3 @@
-// #include <emmintrin.h>
-// #include <x86intrin.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
